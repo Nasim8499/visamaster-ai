@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="bn" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f6fb">
+<title>VisaMaster AI — ভিসা কেস ম্যানেজমেন্ট</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='8' y1='4' x2='56' y2='62' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%230a84ff'/%3E%3Cstop offset='1' stop-color='%235e5ce6'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M20 34l8 8 16-18' stroke='%23fff' stroke-width='5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --bg:#f2f5fb; --ink:#0d1220; --muted:#5d6b85;
+  --glass:rgba(255,255,255,.7); --glass-2:rgba(255,255,255,.55); --edge:rgba(255,255,255,.9);
+  --line:rgba(13,18,32,.08); --pri:#0a84ff; --pri-2:#5e5ce6;
+  --ok:#0f9d58; --warn:#c77700; --err:#d93025;
+}
+[data-theme="dark"]{
+  --bg:#080b12; --ink:#eef2fa; --muted:#93a0b8;
+  --glass:rgba(28,34,48,.62); --glass-2:rgba(30,37,52,.5); --edge:rgba(255,255,255,.14);
+  --line:rgba(255,255,255,.1);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font);color:var(--ink);background:var(--bg);
+  -webkit-font-smoothing:antialiased;overflow:hidden;
+  transition:background .45s ease,color .45s ease;
+}
+body::before{
+  content:"";position:fixed;inset:-20%;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(38% 32% at 18% 12%, rgba(10,132,255,.20), transparent 70%),
+    radial-gradient(34% 30% at 82% 8%, rgba(94,92,230,.18), transparent 70%),
+    radial-gradient(40% 36% at 70% 88%, rgba(255,100,140,.14), transparent 72%),
+    radial-gradient(36% 32% at 12% 82%, rgba(52,199,189,.16), transparent 72%);
+  filter:blur(6px);
+}
+.glass{
+  background:var(--glass);backdrop-filter:blur(26px) saturate(1.9);-webkit-backdrop-filter:blur(26px) saturate(1.9);
+  border:1px solid var(--edge);border-radius:26px;
+  box-shadow:0 18px 48px rgba(13,18,32,.10), inset 0 1px 0 rgba(255,255,255,.75);
+}
+.glass-2{background:var(--glass-2);border:1px solid var(--line);border-radius:20px}
+#app{position:relative;z-index:1;display:flex;height:100vh;gap:14px;padding:14px}
+#side{width:250px;flex:0 0 250px;display:flex;flex-direction:column;padding:16px;gap:6px}
+.brand{display:flex;align-items:center;gap:10px;padding:6px 6px 14px}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--pri),var(--pri-2));display:grid;place-items:center;color:#fff;font-weight:700;box-shadow:0 6px 16px rgba(10,132,255,.35)}
+.brand b{font-size:16px;letter-spacing:-.2px}
+.brand span{display:block;font-size:11px;color:var(--muted)}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav button{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;border:0;background:transparent;
+  color:var(--ink);font:inherit;font-size:14px;text-align:left;cursor:pointer;transition:background .2s,transform .15s
+}
+.nav button:hover{background:rgba(10,132,255,.08)}
+.nav button.on{background:linear-gradient(135deg,rgba(10,132,255,.16),rgba(94,92,230,.14));font-weight:600}
+.nav .ico{width:20px;display:grid;place-items:center;color:var(--pri)}
+#side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+#theme{
+  border:0;border-radius:14px;padding:10px;font:inherit;font-size:13px;font-weight:600;color:#fff;cursor:pointer;
+  background:linear-gradient(120deg,#0a84ff,#5e5ce6,#ec4899,#0a84ff);background-size:280% 280%;
+  animation:grad 6s ease-in-out infinite;box-shadow:0 6px 18px rgba(94,92,230,.3)
+}
+@keyframes grad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+#main{flex:1;min-width:0;display:flex;flex-direction:column;padding:22px;overflow-y:auto}
+h1{font-size:24px;margin:0 0 4px;letter-spacing:-.4px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 18px;line-height:1.5}
+.card{padding:16px;margin-bottom:12px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.between{justify-content:space-between}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:18px}
+.stat{padding:14px 16px;cursor:pointer;transition:transform .15s}
+.stat:hover{transform:translateY(-2px)}
+.stat .n{font-size:26px;font-weight:700;letter-spacing:-1px}
+.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(10,132,255,.12);color:var(--pri)}
+.pill.ok{background:rgba(15,157,88,.14);color:var(--ok)}
+.pill.warn{background:rgba(199,119,0,.14);color:var(--warn)}
+.pill.err{background:rgba(217,48,37,.14);color:var(--err)}
+.pill.mute{background:rgba(93,107,133,.14);color:var(--muted)}
+button.btn{
+  border:1px solid var(--line);background:var(--glass-2);color:var(--ink);font:inherit;font-size:13.5px;font-weight:600;
+  padding:9px 16px;border-radius:13px;cursor:pointer;transition:transform .12s,background .2s
+}
+button.btn:hover{background:rgba(10,132,255,.1)}
+button.btn:active{transform:scale(.97)}
+button.btn.pri{background:linear-gradient(135deg,var(--pri),var(--pri-2));color:#fff;border:0;box-shadow:0 6px 16px rgba(10,132,255,.28)}
+button.btn.sm{padding:6px 12px;font-size:12.5px;border-radius:11px}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+input,select,textarea{
+  width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--glass-2);
+  border:1px solid var(--line);border-radius:13px;padding:11px 13px;outline:none
+}
+input:focus,textarea:focus,select:focus{border-color:rgba(10,132,255,.5);box-shadow:0 0 0 3px rgba(10,132,255,.12)}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600}
+.field{margin-bottom:12px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+.mono{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px}
+.case-card{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.case-card:hover{background:rgba(10,132,255,.06)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:14px 0 16px}
+.tabs button{border:0;background:rgba(93,107,133,.1);color:var(--muted);font:inherit;font-size:12.5px;font-weight:600;padding:7px 13px;border-radius:999px;cursor:pointer}
+.tabs button.on{background:var(--pri);color:#fff}
+.list-item{padding:11px 14px;border-radius:14px;background:var(--glass-2);border:1px solid var(--line);margin-bottom:8px;font-size:13.5px}
+.doc-line{display:flex;justify-content:space-between;gap:10px;align-items:center}
+#toasts{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{padding:11px 18px;border-radius:14px;background:rgba(13,18,32,.9);color:#fff;font-size:13px;max-width:88vw;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+.toast.err{background:rgba(217,48,37,.95)}
+.toast.ok{background:rgba(15,157,88,.95)}
+.empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:13.5px}
+.banner{padding:12px 15px;border-radius:16px;font-size:13px;line-height:1.5;margin-bottom:14px}
+.banner.info{background:rgba(10,132,255,.1);border:1px solid rgba(10,132,255,.2)}
+.banner.warn{background:rgba(199,119,0,.1);border:1px solid rgba(199,119,0,.22)}
+.mobile-tabs{display:none}
+@media(max-width:860px){
+  #app{padding:8px;gap:0}
+  #side{display:none}
+  #main{padding:16px 14px 82px;border-radius:22px}
+  .two{grid-template-columns:1fr}
+  .mobile-tabs{
+    display:flex;position:fixed;left:10px;right:10px;bottom:10px;z-index:50;padding:8px;gap:4px;justify-content:space-around;
+    background:var(--glass);backdrop-filter:blur(24px) saturate(1.8);border:1px solid var(--edge);border-radius:20px;
+    box-shadow:0 12px 34px rgba(13,18,32,.16)
+  }
+  .mobile-tabs button{border:0;background:transparent;color:var(--muted);font:inherit;font-size:10.5px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 8px;border-radius:12px;cursor:pointer}
+  .mobile-tabs button.on{color:var(--pri);background:rgba(10,132,255,.1)}
+  h1{font-size:21px}
+}
+#auth{position:relative;z-index:1;height:100vh;display:grid;place-items:center;padding:18px}
+#auth .glass{width:100%;max-width:420px;padding:26px}
+</style>
+</head>
+<body>
+<div id="auth" hidden></div>
+<div id="app" hidden>
+  <aside id="side" class="glass">
+    <div class="brand"><div class="logo">✓</div><div><b>VisaMaster AI</b><span>Visa Expert console</span></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div id="side-foot">
+      <div class="small muted" id="me-line"></div>
+      <button id="theme">ডার্ক মোড</button>
+      <button class="btn sm" id="logout">লগ আউট</button>
+    </div>
+  </aside>
+  <main id="main" class="glass"></main>
+  <div class="mobile-tabs" id="mtabs"></div>
+</div>
+<div id="toasts"></div>
+
+<script>
+window.addEventListener("error", function (e) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;left:8px;bottom:8px;z-index:9999;background:#d93025;color:#fff;padding:10px 12px;border-radius:10px;font:12px ui-monospace,monospace;max-width:92vw;white-space:pre-wrap";
+  d.textContent = "ERR: " + e.message + " @line " + e.lineno + ":" + e.colno;
+  document.body.appendChild(d);
+});
+window.addEventListener("unhandledrejection", function (e) {
+  var d = document.createElement("div");
+  d.style.cssText = "position:fixed;right:8px;bottom:8px;z-index:9999;background:#c77700;color:#fff;padding:10px 12px;border-radius:10px;font:12px ui-monospace,monospace;max-width:92vw;white-space:pre-wrap";
+  d.textContent = "REJECT: " + (e.reason && e.reason.message ? e.reason.message : e.reason);
+  document.body.appendChild(d);
+});
+</script>
+<script>
+window.onerror=function(m,src,l){var d=document.createElement("div");d.style.cssText="position:fixed;left:10px;bottom:10px;z-index:999;background:#d93025;color:#fff;padding:10px 14px;border-radius:12px;font:13px/1.4 sans-serif;max-width:90vw";d.textContent="JS error: "+m+" (line "+l+")";document.body.appendChild(d);};
+const BASE = "https://superagent-59044608.base44.app/functions/vmApi";
+const S = { token: localStorage.getItem("vm_token") || "", user: null, view: "dash", cases: [], current: null, tab: "overview", meta: null };
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmtDate = (d) => !d ? "—" : new Date(d).toLocaleDateString("bn-BD", { year: "numeric", month: "short", day: "numeric" });
+
+function toast(msg, kind = "") {
+  const el = document.createElement("div");
+  el.className = "toast " + kind; el.textContent = msg;
+  $("#toasts").appendChild(el);
+  setTimeout(() => el.remove(), 4200);
+}
+
+async function api(action, input = {}) {
+  const r = await fetch(BASE, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-vm-token": S.token },
+    body: JSON.stringify({ action, input }),
+  });
+  const j = await r.json().catch(() => ({ ok: false, error: "সার্ভার উত্তর পড়া যায়নি (" + r.status + ")" }));
+  if (!j.ok) throw new Error(j.error || "অনুরোধ ব্যর্থ");
+  return j.data;
+}
+
+/* ---------- theme ---------- */
+const themeBtn = $("#theme");
+function applyTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem("vm_theme", t);
+  themeBtn.textContent = t === "dark" ? "লাইট মোড" : "ডার্ক মোড";
+}
+themeBtn.onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark");
+applyTheme(localStorage.getItem("vm_theme") || "light");
+
+/* ---------- auth ---------- */
+function renderAuth(mode = "login") {
+  $("#app").hidden = true; $("#auth").hidden = false;
+  $("#auth").innerHTML = `<div class="glass">
+    <div class="brand"><div class="logo">✓</div><div><b>VisaMaster AI</b><span>Visa Expert console</span></div></div>
+    <div class="tabs"><button data-mode="login" class="${mode === "login" ? "on" : ""}">লগইন</button><button data-mode="register" class="${mode === "register" ? "on" : ""}">নতুন অ্যাকাউন্ট</button></div>
+    <form id="auth-form">
+      ${mode === "register" ? `<div class="field"><label>নাম</label><input id="a-name" placeholder="আপনার নাম"></div>` : ""}
+      <div class="field"><label>ইমেইল</label><input id="a-email" type="email" autocomplete="username" placeholder="you@example.com"></div>
+      <div class="field"><label>পাসওয়ার্ড ${mode === "register" ? "(৮+ অক্ষর)" : ""}</label><input id="a-pass" type="password" autocomplete="current-password" placeholder="••••••••"></div>
+      <button class="btn pri" style="width:100%" type="submit">${mode === "login" ? "লগইন করুন" : "অ্যাকাউন্ট খুলুন"}</button>
+    </form>
+    <p class="small muted" style="margin-top:14px;line-height:1.5">প্রথম অ্যাকাউন্টটি মালিক (owner) হিসেবে তৈরি হয়। এরপর নতুন অ্যাকাউন্ট স্টাফ/ক্লায়েন্ট হিসেবে যোগ হয়।</p>
+  </div>`;
+  document.querySelectorAll("#auth .tabs button").forEach((b) => b.onclick = () => renderAuth(b.dataset.mode));
+  $("#auth-form").onsubmit = async (e) => {
+    e.preventDefault();
+    const email = $("#a-email").value.trim(), password = $("#a-pass").value;
+    try {
+      const data = await api(mode === "login" ? "auth.login" : "auth.register",
+        mode === "login" ? { email, password } : { email, password, name: $("#a-name")?.value || "" });
+      S.token = data.token; localStorage.setItem("vm_token", S.token); S.user = data.user;
+      toast(mode === "login" ? "স্বাগতম" : "অ্যাকাউন্ট তৈরি হয়েছে", "ok");
+      await boot();
+    } catch (err) { toast(err.message, "err"); }
+  };
+}
+
+$("#logout").onclick = async () => {
+  try { await api("auth.logout"); } catch (_) {}
+  S.token = ""; localStorage.removeItem("vm_token"); S.user = null; renderAuth();
+};
+
+/* ---------- shell ---------- */
+const NAV = [
+  ["dash", "ড্যাশবোর্ড", "▦"],
+  ["cases", "কেস", "▤"],
+  ["intake", "নতুন কেস", "＋"],
+  ["kb", "জ্ঞানভাণ্ডার", "✦"],
+  ["agents", "এজেন্ট দল", "◈"],
+  ["audit", "অডিট", "≣"],
+  ["settings", "সেটিংস", "⚙"],
+];
+function renderNav() {
+  const items = NAV.filter(([id]) => id !== "audit" || S.user?.role === "owner");
+  $("#nav").innerHTML = items.map(([id, label, ico]) =>
+    `<button data-go="${id}" class="${S.view === id ? "on" : ""}"><span class="ico">${ico}</span>${label}</button>`).join("");
+  $("#mtabs").innerHTML = items.slice(0, 5).map(([id, label, ico]) =>
+    `<button data-go="${id}" class="${S.view === id ? "on" : ""}"><span style="font-size:16px">${ico}</span>${label}</button>`).join("");
+  $("#me-line").textContent = `${S.user?.email || ""} · ${S.user?.role === "owner" ? "মালিক" : S.user?.role === "staff" ? "স্টাফ" : "ক্লায়েন্ট"}`;
+}
+document.onclick = (e) => {
+  const go = e.target.closest("[data-go]");
+  if (go) { S.view = go.dataset.go; render(); }
+};
+
+/* ---------- views ---------- */
+async function render() {
+  renderNav();
+  const m = $("#main");
+  if (S.view === "dash") return renderDash(m);
+  if (S.view === "cases") return renderCases(m);
+  if (S.view === "case") return renderCase(m);
+  if (S.view === "intake") return renderIntake(m);
+  if (S.view === "kb") return renderKB(m);
+  if (S.view === "agents") return renderAgents(m);
+  if (S.view === "audit") return renderAudit(m);
+  if (S.view === "settings") return renderSettings(m);
+}
+
+const STATUS_BN = {
+  new: ["নতুন", "mute"], active: ["সক্রিয়", ""], waiting_client: ["ক্লায়েন্টের নথি অপেক্ষায়", "warn"],
+  waiting_owner: ["মালিকের অনুমোদন অপেক্ষায়", "warn"], compliance_hold: ["কমপ্লায়েন্স হোল্ড", "err"],
+  blocked: ["ব্লকড", "err"], filed: ["ফাইল করা হয়েছে", "ok"], closed: ["বন্ধ", "mute"],
+};
+const pill = (s) => { const [t, k] = STATUS_BN[s] || [s || "—", "mute"]; return `<span class="pill ${k}">${esc(t)}</span>`; };
+
+async function renderDash(m) {
+  m.innerHTML = `<h1>ড্যাশবোর্ড</h1><p class="sub">আজকের কেস অবস্থা, সময়সীমা ও ইন্টিগ্রেশন স্ট্যাটাস।</p><div class="empty">লোড হচ্ছে…</div>`;
+  try {
+    const d = await api("dashboard.summary");
+    const c = d.counts;
+    const cards = [
+      ["নতুন লিড", c.newLeads, "new"], ["সক্রিয় কেস", c.active, "active"],
+      ["ক্লায়েন্টের নথি অপেক্ষায়", c.waitingClient, "waiting_client"],
+      ["মালিকের অনুমোদন অপেক্ষায়", c.waitingOwner, "waiting_owner"],
+      ["কমপ্লায়েন্স হোল্ড", c.complianceHold, "compliance_hold"],
+      ["ব্লকড", c.blocked, "blocked"],
+    ];
+    const integ = d.integrations;
+    m.innerHTML = `<h1>ড্যাশবোর্ড</h1><p class="sub">আজকের কেস অবস্থা, সময়সীমা ও ইন্টিগ্রেশন স্ট্যাটাস।</p>
+      <div class="grid">${cards.map(([l, n, s]) =>
+        `<div class="stat glass-2" data-status="${s}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("")}</div>
+      <div class="card glass-2">
+        <div class="row between"><b>ইন্টিগ্রেশন</b><span class="pill mute">আসল অবস্থা</span></div>
+        <div style="margin-top:12px;display:grid;gap:8px">
+          ${integRow("ব্রাউজার সার্ভিস", integ.browserService, "MODE 1/2/3 — আলাদা Docker সার্ভিস দরকার")}
+          ${integRow("শিডিউলার", integ.scheduler, "দৈনিক চেক/রিমাইন্ডার")}
+          ${integRow("মেসেজিং", integ.messaging, "ক্লায়েন্টকে খসড়া পাঠানো")}
+        </div>
+      </div>
+      <div class="card glass-2"><b>আসন্ন সময়সীমা</b>
+        ${d.upcomingDeadlines.length ? d.upcomingDeadlines.map((t) =>
+          `<div class="list-item">${esc(t.agent)} · ${esc(t.expectedOutput || "task")} <span class="pill warn">${fmtDate(t.dueAt)}</span></div>`).join("")
+          : `<div class="empty">কোনো সক্রিয় সময়সীমা নেই।</div>`}</div>
+      <div class="card glass-2"><b>নলেজ বেস আপডেট</b>
+        ${d.kbRuleChanges.length ? d.kbRuleChanges.map((k) =>
+          `<div class="list-item">${esc(k.country)} — <span class="pill err">RULE UPDATED / পর্যালোচনা দরকার</span></div>`).join("")
+          : `<div class="empty">কোনো অমীমাংসিত নিয়ম পরিবর্তন নেই।</div>`}</div>`;
+    m.querySelectorAll("[data-status]").forEach((el) => el.onclick = () => { S.view = "cases"; render(); });
+  } catch (e) { m.innerHTML = `<h1>ড্যাশবোর্ড</h1><div class="banner warn">${esc(e.message)}</div>`; }
+}
+function integRow(name, state, hint) {
+  const map = { connected: ["যুক্ত", "ok"], setup_required: ["Setup required", "warn"], not_configured: ["কনফিগার করা হয়নি", "mute"], not_connected: ["যুক্ত নয়", "mute"] };
+  const [label, kind] = map[state] || [state, "mute"];
+  return `<div class="doc-line"><span>${name} <span class="small muted">— ${hint}</span></span><span class="pill ${kind}">${label}</span></div>`;
+}
+
+async function renderCases(m) {
+  m.innerHTML = `<h1>কেস</h1><p class="sub">সব কেস — অবস্থা অনুযায়ী সাজানো।</p><div class="empty">লোড হচ্ছে…</div>`;
+  try {
+    const d = await api("cases.list");
+    S.cases = d.cases;
+    m.innerHTML = `<h1>কেস</h1><p class="sub">সব কেস — অবস্থা অনুযায়ী সাজানো।</p>
+      <div class="row" style="margin-bottom:12px"><button class="btn pri" data-go="intake">＋ নতুন কেস</button></div>
+      ${d.cases.length ? d.cases.map((c) => `
+        <div class="card glass-2 case-card" data-case="${c.id}">
+          <div>
+            <div class="row"><b>${esc(c.caseNo)}</b>${pill(c.status)}</div>
+            <div class="small muted" style="margin-top:5px">${esc(c.clientName)} · ${esc(c.destination || "—")} · ${esc(c.visaCategory || "—")}</div>
+            ${(c.needed || []).length ? `<div class="small" style="color:var(--warn);margin-top:5px">NEEDED: ${esc(c.needed.join(", "))}</div>` : ""}
+          </div>
+          <div class="small muted">${fmtDate(c.createdAt)}</div>
+        </div>`).join("") : `<div class="empty">এখনো কোনো কেস নেই। “নতুন কেস” দিয়ে শুরু করুন।</div>`}`;
+    m.querySelectorAll("[data-case]").forEach((el) => el.onclick = () => openCase(el.dataset.case));
+  } catch (e) { m.innerHTML = `<h1>কেস</h1><div class="banner warn">${esc(e.message)}</div>`; }
+}
+
+async function openCase(id) { S.caseId = id; S.view = "case"; S.tab = "overview"; await render(); }
+
+async function renderCase(m) {
+  m.innerHTML = `<h1>কেস</h1><div class="empty">লোড হচ্ছে…</div>`;
+  try {
+    const d = await api("cases.get", { caseId: S.caseId });
+    const c = d.case;
+    const tabs = [["overview", "সারসংক্ষেপ"], ["docs", "নথি"], ["kb", "জ্ঞানভাণ্ডার"], ["agents", "এজেন্ট"], ["compliance", "কমপ্লায়েন্স"], ["drafts", "খসড়া"]];
+    const comp = d.compliance ? (() => { try { return JSON.parse(d.compliance.notes); } catch { return null; } })() : null;
+    let body = "";
+    if (S.tab === "overview") {
+      body = `<div class="card glass-2">
+        <div class="row between"><b>${esc(c.caseNo)}</b>${pill(c.status)}</div>
+        <div class="two" style="margin-top:12px">
+          <div><label>আবেদনকারী</label><div>${esc(c.clientName)}</div></div>
+          <div><label>গন্তব্য</label><div>${esc(c.destination || "—")}</div></div>
+          <div><label>ভিসা ক্যাটাগরি</label><div>${esc(c.visaCategory || "—")}</div></div>
+          <div><label>উদ্দেশ্য</label><div>${esc(c.purpose || "—")}</div></div>
+          <div><label>ভ্রমণ</label><div>${fmtDate(c.travelFrom)} → ${fmtDate(c.travelTo)}</div></div>
+          <div><label>পাসপোর্ট</label><div class="mono">${esc(c.passportNumber || "NEEDED")}</div></div>
+          <div><label>জাতীয়তা / ধরন</label><div>${esc(c.passportNationality || "—")} · ${esc(c.passportType || "—")}</div></div>
+          <div><label>প্রস্তুতি</label><div>${esc(c.readiness || "—")}</div></div>
+        </div>
+        ${(c.needed || []).length ? `<div class="banner warn" style="margin-top:12px">NEEDED: ${esc(c.needed.join(", "))}</div>` : ""}
+      </div>
+      <div class="row"><button class="btn pri" id="run-comp">কমপ্লায়েন্স রিভিউ চালান</button>
+        <button class="btn" id="queue-research">ভিসা রিসার্চ টাস্ক কিউ করুন</button></div>`;
+    }
+    if (S.tab === "docs") {
+      body = `<div class="card glass-2"><b>নথি</b>
+        ${d.documents.length ? d.documents.map((doc) => `<div class="list-item doc-line">
+          <span>${esc(doc.type)} · ${esc(doc.fileName)}</span>
+          <span class="row">${doc.confidence ? `<span class="small muted">${Math.round(doc.confidence * 100)}%</span>` : ""}
+          <span class="pill ${doc.status === "confirmed" ? "ok" : "warn"}">${esc(doc.status)}</span></span></div>`).join("")
+          : `<div class="empty">কোনো নথি নেই।</div>`}</div>
+        <div class="banner info">নথি আপলোড হলে সেটি স্টাফ/মালিক যাচাই করে “confirmed” করেন। ক্লায়েন্ট ভিউতে পাসপোর্ট নম্বর মাস্ক করা থাকে।</div>`;
+    }
+    if (S.tab === "kb") {
+      body = `<div class="card glass-2"><b>এই গন্তব্যের জ্ঞানভাণ্ডার</b>
+        ${d.knowledge.length ? d.knowledge.map((k) => `<div class="list-item doc-line">
+          <span>${esc(k.country || c.destination)} · ${esc(k.visaCategory || "")} <span class="small muted">v${k.version}</span></span>
+          <span class="pill ${k.status === "OFFICIAL" ? "ok" : k.status === "UNVERIFIED" ? "warn" : "err"}">${esc(k.status)}</span></div>`).join("")
+          : `<div class="empty">এই গন্তব্যের কোনো এন্ট্রি নেই — UNVERIFIED ধরুন।</div>`}
+        <div class="banner warn" style="margin-top:10px">UNVERIFIED নিয়ম কখনো [OFFICIAL] হিসেবে দেখানো হয় না। অফিসিয়াল সোর্স যাচাই ছাড়া কেস-নির্দিষ্ট পরামর্শ দেওয়া হয় না।</div></div>`;
+    }
+    if (S.tab === "agents") {
+      body = `<div class="card glass-2"><b>এজেন্ট টাস্ক</b>
+        ${d.tasks.length ? d.tasks.map((t) => `<div class="list-item doc-line">
+          <span>${esc(t.agent)} <span class="small muted">${esc(t.expectedOutput || "")}</span></span>
+          <span class="pill ${t.status === "completed" ? "ok" : t.status === "blocked" || t.status === "failed" ? "err" : "warn"}">${esc(t.status)}</span></div>`).join("")
+          : `<div class="empty">কোনো টাস্ক নেই।</div>`}
+        <div class="row" style="margin-top:10px">
+          <button class="btn sm" data-q="document_intelligence">নথি যাচাই কিউ</button>
+          <button class="btn sm" data-q="case_strategy">কেস স্ট্র্যাটেজি কিউ</button>
+          <button class="btn sm" data-q="operations">অপারেশন্স কিউ</button>
+        </div>
+        <div class="banner info" style="margin-top:10px">টাস্ক কিউ হয় এবং স্ট্যাটাস সত্যি থাকে। Visa Expert (AI) বা স্টাফ টাস্কটি হাতে নিয়ে ফলাফল লেখেন — অ্যাপ নিজে থেকে ফলাফল বানায় না।</div></div>`;
+    }
+    if (S.tab === "compliance") {
+      body = `<div class="card glass-2"><b>কমপ্লায়েন্স ভের্ডিক্ট</b>
+        ${d.compliance ? `<div style="margin:10px 0"><span class="pill ${d.compliance.verdict === "PASS" ? "ok" : d.compliance.verdict === "PASS WITH FIXES" ? "warn" : "err"}">${esc(d.compliance.verdict)}</span></div>
+          ${comp?.blockers?.length ? `<div class="banner warn"><b>ব্লকার</b><br>${comp.blockers.map(esc).join("<br>")}</div>` : ""}
+          ${comp?.fixes?.length ? `<div class="banner info"><b>যা ঠিক করতে হবে</b><br>${comp.fixes.map(esc).join("<br>")}</div>` : ""}
+          <div class="small muted">${esc(comp?.note || "")}</div>`
+          : `<div class="empty">এখনো রিভিউ চালানো হয়নি।</div>`}
+        <div class="row" style="margin-top:12px"><button class="btn pri" id="run-comp-2">রিভিউ চালান</button>
+          ${S.user?.role === "owner" && d.compliance?.verdict === "PASS" ? `<button class="btn" id="mark-filed">ম্যানুয়াল ফাইলিং রেকর্ড করুন</button>` : ""}</div>
+        <div class="banner warn" style="margin-top:10px">PASS মানে অনুমোদনের নিশ্চয়তা নয়। ফাইলিং সবসময় মালিকের স্পষ্ট নিশ্চিতকরণে, ম্যানুয়ালি।</div></div>`;
+    }
+    if (S.tab === "drafts") {
+      body = `<div class="card glass-2"><b>ক্লায়েন্ট বার্তার খসড়া</b>
+        ${S.user?.role !== "client" ? `<div class="row" style="margin:10px 0"><button class="btn sm" data-d="doc_request">নথির অনুরোধ</button><button class="btn sm" data-d="case_update">কেস আপডেট</button><button class="btn sm" data-d="next_steps">পরবর্তী ধাপ</button></div>` : ""}
+        ${d.drafts.length ? d.drafts.map((dr) => `<div class="list-item">
+          <div class="doc-line"><b>${esc(dr.kind)}</b><span class="pill ${dr.status === "sent" ? "ok" : dr.status === "approved" ? "" : "warn"}">${esc(dr.status)}</span></div>
+          <div class="small" style="white-space:pre-wrap;margin-top:6px">${esc(dr.body)}</div>
+          ${S.user?.role === "owner" && dr.status === "draft" ? `<button class="btn sm" style="margin-top:8px" data-approve="${dr.id}">অনুমোদন দিন</button>` : ""}
+          ${S.user?.role === "owner" && dr.status === "approved" ? `<button class="btn sm" style="margin-top:8px" data-send="${dr.id}">পাঠানোর চেষ্টা করুন</button>` : ""}
+        </div>`).join("") : `<div class="empty">কোনো খসড়া নেই।</div>`}
+        <div class="banner warn" style="margin-top:10px">খসড়া মালিকের অনুমোদন ছাড়া পাঠানো হয় না। মেসেজিং ইন্টিগ্রেশন যুক্ত না থাকলে পাঠানো ব্লক থাকে (Setup required)।</div></div>`;
+    }
+    m.innerHTML = `<div class="row between"><div><h1>${esc(c.caseNo)}</h1><p class="sub">${esc(c.clientName)} · ${esc(c.destination || "—")}</p></div>
+        <button class="btn" id="back">← কেস তালিকা</button></div>
+      <div class="tabs">${tabs.map(([id, label]) => `<button data-tab="${id}" class="${S.tab === id ? "on" : ""}">${label}</button>`).join("")}</div>${body}`;
+
+    $("#back").onclick = () => { S.view = "cases"; render(); };
+    m.querySelectorAll("[data-tab]").forEach((b) => b.onclick = () => { S.tab = b.dataset.tab; render(); });
+    const runComp = async () => {
+      try { const r = await api("compliance.review", { caseId: c.id }); toast("ভের্ডিক্ট: " + r.compliance.verdict, r.compliance.verdict === "PASS" ? "ok" : ""); S.tab = "compliance"; render(); }
+      catch (e) { toast(e.message, "err"); }
+    };
+    $("#run-comp") && ($("#run-comp").onclick = runComp);
+    $("#run-comp-2") && ($("#run-comp-2").onclick = runComp);
+    $("#queue-research") && ($("#queue-research").onclick = async () => {
+      try { await api("tasks.queue", { caseId: c.id, agent: "visa_research", expectedOutput: "অফিসিয়াল সোর্স থেকে ভিসা নিয়ম" }); toast("রিসার্চ টাস্ক কিউ হয়েছে", "ok"); S.tab = "agents"; render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    m.querySelectorAll("[data-q]").forEach((b) => b.onclick = async () => {
+      try { await api("tasks.queue", { caseId: c.id, agent: b.dataset.q, expectedOutput: b.textContent }); toast("কিউ করা হয়েছে", "ok"); S.tab = "agents"; render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    m.querySelectorAll("[data-d]").forEach((b) => b.onclick = async () => {
+      try { await api("drafts.create", { caseId: c.id, kind: b.dataset.d }); toast("খসড়া তৈরি হয়েছে (অনুমোদন দরকার)", "ok"); render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    m.querySelectorAll("[data-approve]").forEach((b) => b.onclick = async () => {
+      try { await api("drafts.approve", { draftId: b.dataset.approve }); toast("অনুমোদিত", "ok"); render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    m.querySelectorAll("[data-send]").forEach((b) => b.onclick = async () => {
+      try { await api("drafts.send", { draftId: b.dataset.send }); toast("পাঠানো হয়েছে", "ok"); render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    $("#mark-filed") && ($("#mark-filed").onclick = async () => {
+      const ref = prompt("পোর্টালের রেফারেন্স নম্বর (থাকলে) — ম্যানুয়াল ফাইলিং রেকর্ড হবে:");
+      if (ref === null) return;
+      try { await api("cases.markFiled", { caseId: c.id, confirm: true, reference: ref }); toast("ফাইলিং রেকর্ড হয়েছে", "ok"); render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+  } catch (e) { m.innerHTML = `<h1>কেস</h1><div class="banner warn">${esc(e.message)}</div>`; }
+}
+
+function renderIntake(m) {
+  m.innerHTML = `<h1>নতুন কেস</h1><p class="sub">আবেদনকারীর তথ্য দিন — অজানা ঘর খালি রাখুন, অনুমান লেখা হবে না।</p>
+    <form class="card glass-2" id="intake">
+      <div class="two">
+        <div class="field"><label>আবেদনকারীর নাম *</label><input id="i-name" required></div>
+        <div class="field"><label>মোবাইল</label><input id="i-phone" placeholder="+880..."></div>
+        <div class="field"><label>ইমেইল (ক্লায়েন্ট অ্যাকাউন্টের জন্য)</label><input id="i-email" type="email"></div>
+        <div class="field"><label>গন্তব্য *</label><input id="i-dest" required placeholder="Singapore"></div>
+        <div class="field"><label>ভিসা ক্যাটাগরি</label><input id="i-cat" placeholder="tourist / business"></div>
+        <div class="field"><label>উদ্দেশ্য</label><input id="i-purpose" placeholder="পারিবারিক ভ্রমণ"></div>
+        <div class="field"><label>ভ্রমণ শুরু</label><input id="i-from" type="date"></div>
+        <div class="field"><label>ভ্রমণ শেষ</label><input id="i-to" type="date"></div>
+        <div class="field"><label>পাসপোর্ট নম্বর</label><input id="i-pass"></div>
+        <div class="field"><label>পাসপোর্ট মেয়াদ</label><input id="i-exp" type="date"></div>
+      </div>
+      <div class="field"><label>নোট (ঐচ্ছিক)</label><textarea id="i-notes" rows="2"></textarea></div>
+      <button class="btn pri" type="submit">কেস তৈরি করুন</button>
+    </form>`;
+  $("#intake").onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await api("cases.create", { case: {
+        clientName: $("#i-name").value.trim(), clientPhone: $("#i-phone").value.trim(),
+        clientEmail: $("#i-email").value.trim(), destination: $("#i-dest").value.trim(),
+        visaCategory: $("#i-cat").value.trim(), purpose: $("#i-purpose").value.trim(),
+        travelFrom: $("#i-from").value, travelTo: $("#i-to").value,
+        passportNumber: $("#i-pass").value.trim(), passportExpiry: $("#i-exp").value,
+        notes: $("#i-notes").value.trim(),
+      } });
+      toast("কেস তৈরি: " + r.case.caseNo, "ok");
+      await openCase(r.case.id);
+    } catch (err) { toast(err.message, "err"); }
+  };
+}
+
+async function renderKB(m) {
+  m.innerHTML = `<h1>জ্ঞানভাণ্ডার</h1><p class="sub">দেশভিত্তিক নিয়ম — প্রতিটি এন্ট্রি সোর্স ও তারিখসহ সংরক্ষিত।</p><div class="empty">লোড হচ্ছে…</div>`;
+  try {
+    const d = await api("kb.list");
+    const rows = d.knowledge;
+    m.innerHTML = `<h1>জ্ঞানভাণ্ডার</h1><p class="sub">দেশভিত্তিক নিয়ম — প্রতিটি এন্ট্রি সোর্স ও তারিখসহ সংরক্ষিত।</p>
+      ${rows.length ? rows.map((k) => `<div class="card glass-2">
+        <div class="doc-line"><b>${esc(k.country)}</b>
+          <span class="row"><span class="small muted">v${k.version}</span>
+          <span class="pill ${k.status === "OFFICIAL" ? "ok" : k.status === "UNVERIFIED" ? "warn" : "err"}">${esc(k.status)}</span></span></div>
+        <div class="small muted" style="margin-top:6px">${esc(k.statement)}</div>
+        ${k.sourceUrl ? `<div class="small mono" style="margin-top:6px">${esc(k.sourceUrl)}</div>` : `<div class="small" style="color:var(--warn);margin-top:6px">অফিসিয়াল সোর্স যুক্ত হয়নি</div>`}
+        ${S.user?.role === "owner" ? `<button class="btn sm" style="margin-top:8px" data-verify="${k.id}" data-country="${esc(k.country)}">অফিসিয়াল সোর্স দিয়ে যাচাই করুন</button>` : ""}
+      </div>`).join("") : `<div class="card glass-2"><div class="empty">নলেজ বেস খালি।</div>${S.user?.role === "owner" ? `<button class="btn pri" id="seed">১০টি দেশের সিড এন্ট্রি যোগ করুন (UNVERIFIED)</button>` : ""}</div>`}`;
+    $("#seed") && ($("#seed").onclick = async () => {
+      try { const r = await api("kb.seed", { countries: [] }); toast(r.created.length + "টি এন্ট্রি যোগ হয়েছে", "ok"); render(); }
+      catch (e) { toast(e.message, "err"); }
+    });
+    m.querySelectorAll("[data-verify]").forEach((b) => b.onclick = async () => {
+      const url = prompt("অফিসিয়াল সোর্স URL দিন (যেমন দূতাবাস/ইমিগ্রেশন সাইট):");
+      if (!url) return;
+      const statement = prompt("সোর্সে ঠিক কী লেখা আছে? (হুবহু সারমর্ম)");
+      if (!statement) return;
+      try {
+        await api("kb.upsert", { entry: { id: b.dataset.verify, country: b.dataset.country, statement, sourceUrl: url, sourceType: "official", checkedAt: new Date().toISOString(), status: "OFFICIAL" } });
+        toast("আপডেট হয়েছে — নিয়ম বদলালে RULE UPDATED হবে", "ok"); render();
+      } catch (e) { toast(e.message, "err"); }
+    });
+  } catch (e) { m.innerHTML = `<h1>জ্ঞানভাণ্ডার</h1><div class="banner warn">${esc(e.message)}</div>`; }
+}
+
+function renderAgents(m) {
+  const agents = [
+    ["ভিসা রিসার্চ", "অফিসিয়াল সোর্স থেকে নিয়ম যাচাই", "visa_research"],
+    ["নথি বুদ্ধিমত্তা", "পাসপোর্ট/নথি এক্সট্রাকশন ও যাচাই", "document_intelligence"],
+    ["কেস স্ট্র্যাটেজি", "পথ ও পরিকল্পনা সুপারিশ", "case_strategy"],
+    ["আবেদন প্রস্তুতি", "ফিল্ড ম্যাপ ও খসড়া", "application_prep"],
+    ["কমপ্লায়েন্স", "ফাইলিং-পূর্ব চূড়ান্ত গেট", "compliance"],
+    ["ক্লায়েন্ট কমিউনিকেশন", "বাংলা বার্তার খসড়া", "client_comms"],
+    ["অপারেশন্স", "টাস্ক, রিমাইন্ডার, এসকেলেশন", "operations"],
+    ["ব্রাউজার এজেন্ট", "MODE 1/2/3 (আলাদা সার্ভিস)", "browser"],
+  ];
+  m.innerHTML = `<h1>এজেন্ট দল</h1><p class="sub">সাতজন এজেন্ট + ব্রাউজার এজেন্ট, Super Agent দ্বারা সমন্বিত।</p>
+    ${agents.map(([name, desc, id]) => `<div class="card glass-2 doc-line">
+      <div><b>${name}</b><div class="small muted">${desc}</div></div>
+      <span class="pill ${id === "browser" ? "warn" : "mute"}">${id === "browser" ? "Setup required" : "কেস থেকে কিউ করুন"}</span></div>`).join("")}
+    <div class="banner info">টাস্কগুলো কেস পেজের “এজেন্ট” ট্যাব থেকে কিউ হয়। কোনো এজেন্ট আলাদা প্রসেস হিসেবে চলেছে বলে দাবি করা হয় না — স্ট্যাটাস সত্যি থাকে।</div>`;
+}
+
+async function renderAudit(m) {
+  m.innerHTML = `<h1>অডিট লগ</h1><div class="empty">লোড হচ্ছে…</div>`;
+  try {
+    const d = await api("audit.list");
+    m.innerHTML = `<h1>অডিট লগ</h1><p class="sub">অনুমোদন, রেকর্ড পরিবর্তন ও ফাইলিং ইভেন্ট।</p>
+      ${d.audit.length ? d.audit.map((a) => `<div class="list-item doc-line">
+        <span><b>${esc(a.action)}</b> <span class="small muted">${esc(a.detail)}</span></span>
+        <span class="small muted">${new Date(a.at).toLocaleString("bn-BD")}</span></div>`).join("")
+        : `<div class="empty">কোনো ইভেন্ট নেই।</div>`}`;
+  } catch (e) { m.innerHTML = `<h1>অডিট লগ</h1><div class="banner warn">${esc(e.message)}</div>`; }
+}
+
+async function renderSettings(m) {
+  let meta = S.meta;
+  try { meta = await api("meta"); S.meta = meta; } catch (_) {}
+  const integ = meta?.integrations || {};
+  m.innerHTML = `<h1>সেটিংস</h1><p class="sub">ডোমেইন রেজিস্ট্রি ও ইন্টিগ্রেশন অবস্থা।</p>
+    <div class="card glass-2"><b>ইন্টিগ্রেশন</b>
+      <div style="margin-top:10px;display:grid;gap:8px">
+        ${integRow("ব্রাউজার সার্ভিস (Playwright Docker)", integ.browserService, "VM_BROWSER_SERVICE_URL")}
+        ${integRow("শিডিউলার", integ.scheduler, "VM_SCHEDULER")}
+        ${integRow("মেসেজিং (SMS/WhatsApp)", integ.messaging, "VM_MESSAGING")}
+      </div>
+      <div class="banner warn" style="margin-top:12px">এই ইন্টিগ্রেশনগুলো যুক্ত না হওয়া পর্যন্ত সংশ্লিষ্ট কাজ ব্লক থাকে এবং “Setup required” দেখায় — ভুয়া “live” দেখানো হয় না।</div>
+    </div>
+    <div class="card glass-2"><b>অফিসিয়াল ডোমেইন রেজিস্ট্রি</b>
+      <div class="small muted" style="margin:6px 0 10px">ব্রাউজার এজেন্ট শুধুমাত্র অনুমোদিত ডোমেইনে কাজ করবে।</div>
+      ${S.user?.role === "owner" ? `<div class="row"><input id="d-host" placeholder="ica.gov.sg" style="flex:1"><button class="btn pri" id="d-add">যোগ করুন</button></div>` : ""}
+      <div class="row" style="margin-top:10px"><input id="d-check" placeholder="যেকোনো URL যাচাই করুন" style="flex:1"><button class="btn" id="d-chk">চেক</button></div>
+      <div id="d-out" class="small" style="margin-top:8px"></div>
+    </div>
+    <div class="card glass-2"><b>ডেমো ডেটা</b>
+      <div class="small muted" style="margin:6px 0 10px">সিন্থেটিক কেস — বাস্তব আবেদনে ব্যবহার করবেন না।</div>
+      ${S.user?.role === "owner" ? `<div class="row"><button class="btn sm" id="demo-seed">ডেমো ডেটা যোগ</button><button class="btn sm" id="demo-reset">ডেমো মুছুন</button></div>` : ""}
+    </div>`;
+  $("#d-check") && ($("#d-check").onclick = async () => {
+    try { const r = await api("browser.domain.check", { url: $("#d-check").value }); $("#d-out").innerHTML = `<span class="pill ${r.approved ? "ok" : "err"}">${esc(r.host)} — ${r.approved ? "অনুমোদিত" : "ব্লকড (রেজিস্ট্রিতে নেই)"}</span>`; }
+    catch (e) { toast(e.message, "err"); }
+  });
+  $("#d-add") && ($("#d-add").onclick = async () => {
+    try { await api("browser.domain.add", { host: $("#d-host").value, approved: true }); toast("ডোমেইন যোগ হয়েছে", "ok"); }
+    catch (e) { toast(e.message, "err"); }
+  });
+  $("#demo-seed") && ($("#demo-seed").onclick = async () => {
+    try { const r = await api("demo.seed"); toast(r.seeded ? "ডেমো যোগ হয়েছে" : "ডেমো আগেই আছে", "ok"); }
+    catch (e) { toast(e.message, "err"); }
+  });
+  $("#demo-reset") && ($("#demo-reset").onclick = async () => {
+    try { const r = await api("demo.reset"); toast(r.removed + "টি ডেমো কেস মুছেছে", "ok"); }
+    catch (e) { toast(e.message, "err"); }
+  });
+}
+
+/* ---------- boot ---------- */
+async function boot() {
+  if (!S.token) return renderAuth();
+  try {
+    const d = await api("auth.me");
+    S.user = d.user;
+    $("#auth").hidden = true; $("#app").hidden = false;
+    S.view = "dash"; await render();
+  } catch (e) {
+    S.token = ""; localStorage.removeItem("vm_token"); renderAuth();
+  }
+}
+boot();
+</script>
+</body>
+</html>
