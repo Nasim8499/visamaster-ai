@@ -168,6 +168,7 @@ window.addEventListener("unhandledrejection", function (e) {
 window.onerror=function(m,src,l){var d=document.createElement("div");d.style.cssText="position:fixed;left:10px;bottom:10px;z-index:999;background:#d93025;color:#fff;padding:10px 14px;border-radius:12px;font:13px/1.4 sans-serif;max-width:90vw";d.textContent="JS error: "+m+" (line "+l+")";document.body.appendChild(d);};
 const WS_BASE = "https://superagent-59044608.base44.app/functions/vmWs";
 const BASE = "https://superagent-59044608.base44.app/functions/vmApi";
+const WA_BASE = "https://superagent-59044608.base44.app/functions/waApi";
 const S = { token: localStorage.getItem("vm_token") || "", user: null, view: "dash", cases: [], current: null, tab: "overview", meta: null };
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -239,6 +240,7 @@ const NAV = [
   ["dash", "ড্যাশবোর্ড", "▦"],
   ["cases", "কেস", "▤"],
   ["workspaces", "ওয়ার্কস্পেস", "◫"],
+  ["wa", "WhatsApp AI", "✆"],
   ["intake", "নতুন কেস", "＋"],
   ["kb", "জ্ঞানভাণ্ডার", "✦"],
   ["agents", "এজেন্ট দল", "◈"],
@@ -265,6 +267,7 @@ async function render() {
   if (S.view === "dash") return renderDash(m);
   if (S.view === "cases") return renderCases(m);
   if (S.view === "workspaces") return renderWorkspaces(m);
+  if (S.view === "wa") return renderWA(m);
   if (S.view === "case") return renderCase(m);
   if (S.view === "intake") return renderIntake(m);
   if (S.view === "kb") return renderKB(m);
@@ -344,6 +347,80 @@ async function renderCases(m) {
 async function openCase(id) { S.caseId = id; S.view = "case"; S.tab = "overview"; await render(); }
 
 const shortId = (x) => String(x || "").split("-")[0].slice(0, 8);
+
+/* ---------- WhatsApp AI Agent ---------- */
+async function renderWA(m) {
+  m.innerHTML = `<h1>WhatsApp AI এজেন্ট</h1><p class="sub">২৪/৭ কাস্টমার সাপোর্ট ও লিড কোয়ালিফিকেশন — Meta Cloud API।</p>
+    <div id="wa-setup" class="card glass-2"><b>কানেকশন</b><div class="small muted" style="margin-top:8px">লোড হচ্ছে…</div></div>
+    <div id="wa-stats" class="grid3" style="margin-top:14px"></div>
+    <div class="card glass-2" style="margin-top:14px"><div class="row between"><b>ইনবক্স</b><button class="btn" id="wa-refresh">রিফ্রেশ</button></div>
+      <div id="wa-convs" class="small" style="margin-top:10px">লোড হচ্ছে…</div></div>
+    <div id="wa-thread"></div>`;
+  $("#wa-refresh").onclick = () => renderWA(m);
+
+  let setup = null, stats = null, convs = [];
+  try { setup = await api("setup.status", {}, WA_BASE); } catch (e) { $("#wa-setup").innerHTML = `<b>কানেকশন</b><div class="banner warn" style="margin-top:8px">${esc(e.message)}</div>`; return; }
+  try { stats = await api("stats", {}, WA_BASE); } catch (_) {}
+  try { convs = (await api("conv.list", {}, WA_BASE)).conversations || []; } catch (_) {}
+
+  const env = setup.env || {};
+  $("#wa-setup").innerHTML = `<div class="row between"><b>কানেকশন</b>${setup.connected ? pill("active") : `<span class="pill warn">Setup required</span>`}</div>
+    <div style="margin-top:12px;display:grid;gap:10px">
+      <div><div class="small muted">Webhook Callback URL (Meta ড্যাশবোর্ডে দিন)</div><div class="mono small" style="word-break:break-all">${esc(setup.webhookUrl)}</div></div>
+      <div><div class="small muted">Verify Token</div><div class="mono small">${esc(setup.verifyToken || "— (env সেট করুন)")}</div></div>
+      <div class="small muted">Env: access token ${env.WHATSAPP_ACCESS_TOKEN ? "✔" : "✕"} · phone number id ${env.WHATSAPP_PHONE_NUMBER_ID ? "✔" : "✕"} · verify token ${env.WHATSAPP_VERIFY_TOKEN ? "✔" : "✕"}</div>
+      ${setup.connected ? "" : `<div class="banner warn">তিনটি credential না দেওয়া পর্যন্ত কোনো মেসেজ পাঠানো যাবে না — ভুয়া “connected” দেখানো হয় না।</div>`}
+      <div class="row"><button class="btn" id="wa-selftest">Webhook সেলফ-টেস্ট</button><span id="wa-test-out" class="small muted"></span></div>
+    </div>`;
+  $("#wa-selftest").onclick = async () => {
+    try { const r = await api("webhook.selfTest", {}, WA_BASE); $("#wa-test-out").textContent = r.pass ? "✔ verify পাস" : "✕ ব্যর্থ (HTTP " + r.http + ")"; }
+    catch (e) { $("#wa-test-out").textContent = "✕ " + e.message; }
+  };
+
+  if (stats) {
+    $("#wa-stats").innerHTML = [
+      ["কথোপকথন", stats.conversations], ["অপঠিত", stats.unread], ["মানুষ দরকার", stats.needsHuman],
+      ["AI বিরত", stats.paused], ["লিড", stats.leads], ["অ্যাপয়েন্টমেন্ট", stats.appointments],
+    ].map(([l, v]) => `<div class="card glass-2" style="padding:14px"><div class="small muted">${l}</div><div style="font-size:22px;font-weight:700">${v}</div></div>`).join("");
+  }
+
+  if (!convs.length) { $("#wa-convs").innerHTML = `<div class="empty">এখনো কোনো WhatsApp কথোপকথন নেই।</div>`; return; }
+  $("#wa-convs").innerHTML = convs.map((c) => `<div class="card glass-2" data-phone="${esc(c.phone)}" style="cursor:pointer;margin-bottom:8px">
+      <div class="row between"><b>${esc(c.name || c.phone)}</b>
+        <span class="small muted">${c.unread ? c.unread + " অপঠিত" : ""} ${c.aiPaused ? " · AI বিরত" : ""} ${c.needsHuman ? " · মানব" : ""}</span></div>
+      <div class="small muted" style="margin-top:4px">${esc((c.lastText || "").slice(0, 90))}</div></div>`).join("");
+  $$("#wa-convs [data-phone]").forEach((el) => el.onclick = () => openWAThread(el.dataset.phone));
+}
+
+async function openWAThread(phone) {
+  const box = $("#wa-thread");
+  box.innerHTML = `<div class="card glass-2" style="margin-top:14px">লোড হচ্ছে…</div>`;
+  let d;
+  try { d = await api("conv.get", { phone }, WA_BASE); } catch (e) { box.innerHTML = `<div class="banner warn">${esc(e.message)}</div>`; return; }
+  const conv = d.conversation || {};
+  box.innerHTML = `<div class="card glass-2" style="margin-top:14px">
+    <div class="row between"><b>${esc(conv.name || phone)}</b><span class="small mono">${esc(phone)}</span></div>
+    <div class="row" style="margin-top:10px;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="wa-pause">${conv.aiPaused ? "AI চালু করুন" : "AI বিরত রাখুন"}</button>
+      <button class="btn" id="wa-human">${conv.needsHuman ? "মানব-ফ্ল্যাগ সরান" : "মানব সহায়তা ফ্ল্যাগ"}</button>
+      ${(d.cases || []).length ? `<span class="pill">${esc(d.cases[0].caseNo)} · ${esc(d.cases[0].status)}</span>` : ""}
+    </div>
+    <div style="margin-top:14px;max-height:340px;overflow:auto;display:grid;gap:8px">
+      ${(d.messages || []).map((x) => `<div style="align-self:${x.direction === "in" ? "flex-start" : "flex-end"};max-width:82%;background:${x.direction === "in" ? "rgba(0,0,0,.05)" : "var(--accent-soft,#dbeafe)"};padding:9px 12px;border-radius:14px">
+        <div style="font-size:13px">${esc(x.text)}</div><div class="small muted" style="font-size:10px;margin-top:3px">${x.direction === "in" ? "ক্লায়েন্ট" : (x.byAI ? "AI" : "স্টাফ")} · ${esc((x.at || "").slice(11, 16))}</div></div>`).join("") || `<div class="empty">কোনো মেসেজ নেই</div>`}
+    </div>
+    <div class="row" style="margin-top:12px"><input id="wa-reply" placeholder="হাতে উত্তর লিখুন…" style="flex:1"><button class="btn pri" id="wa-send">পাঠান</button></div>
+    <div id="wa-send-out" class="small muted" style="margin-top:6px"></div>
+    ${d.lead ? `<div class="small muted" style="margin-top:10px">লিড: ${esc(d.lead.name || "")} · ${esc(d.lead.country || "—")} · ${esc(d.lead.visaType || "—")} · ${esc(d.lead.stage || "")}</div>` : ""}
+  </div>`;
+  $("#wa-pause").onclick = async () => { try { await api("conv.pause", { phone, paused: !conv.aiPaused }, WA_BASE); openWAThread(phone); } catch (e) { toast(e.message); } };
+  $("#wa-human").onclick = async () => { try { await api("conv.needsHuman", { phone, value: !conv.needsHuman }, WA_BASE); openWAThread(phone); } catch (e) { toast(e.message); } };
+  $("#wa-send").onclick = async () => {
+    const text = $("#wa-reply").value.trim(); if (!text) return;
+    try { await api("msg.send", { phone, text, byAI: false }, WA_BASE); $("#wa-send-out").textContent = "✔ পাঠানো হয়েছে"; $("#wa-reply").value = ""; openWAThread(phone); }
+    catch (e) { $("#wa-send-out").textContent = "✕ " + e.message; }
+  };
+}
 
 async function renderWorkspaces(m) {
   m.innerHTML = `<h1>ওয়ার্কস্পেস</h1><p class="sub">প্রতিটি অফিস/শাখা আলাদা ওয়ার্কস্পেস — কেসগুলো ওয়ার্কস্পেস অনুযায়ী সাজানো।</p><div class="empty">লোড হচ্ছে…</div>`;
